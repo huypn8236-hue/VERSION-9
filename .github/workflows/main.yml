@@ -1,4 +1,4 @@
-name: Build APK with Buildozer (Fix NDK Conflict)
+name: Build APK with Buildozer (ML Kit + Pyzbar)
 
 on:
   push:
@@ -8,12 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     env:
       TERM: dumb
-      ANDROID_HOME: ""
-      ANDROID_SDK_ROOT: ""
-      ANDROID_NDK_HOME: ""
-      ANDROID_NDK_ROOT: ""
 
     steps:
     - name: Checkout code
@@ -65,8 +62,14 @@ jobs:
           m4 autoconf-archive make cmake ninja-build \
           imagemagick
         sudo mkdir -p /usr/share/aclocal
-        pip install --upgrade pip wheel setuptools Cython==0.29.36
-        pip install buildozer==1.4.0
+
+        # =========================================================
+        # FIX LỖI PIP
+        # =========================================================
+        python -m pip install --upgrade pip==23.3.2
+        python -m pip install --upgrade setuptools==69.0.3 wheel
+        python -m pip install Cython==0.29.36
+        python -m pip install buildozer==1.4.0
 
     - name: Patch libtool / autoconf
       run: |
@@ -131,6 +134,9 @@ jobs:
         orientation = portrait
         fullscreen = 0
 
+        # =========================================================
+        # CHỈ ML KIT + PYZBAR (KHÔNG OPENCV)
+        # =========================================================
         requirements = python3,kivy,pyjnius,pillow,plyer,pyzbar,camera4kivy
 
         android.permissions = CAMERA,INTERNET,ACCESS_NETWORK_STATE,BLUETOOTH,BLUETOOTH_ADMIN,BLUETOOTH_CONNECT,BLUETOOTH_SCAN,ACCESS_FINE_LOCATION
@@ -151,12 +157,19 @@ jobs:
         android.ndk_api = 21
         android.archs = arm64-v8a,armeabi-v7a
 
+        # =========================================================
+        # P4A CONFIG: BOOTSTRAP + COMMIT
+        # =========================================================
         p4a.branch = master
-        p4a.bootstrap = sdl2
+        p4a.bootstrap = sdl2_gradle
+        p4a.commit = v2024.01.21
 
         android.allow_backup = True
         android.enable_androidx = True
 
+        # =========================================================
+        # GRADLE CHO ML KIT
+        # =========================================================
         android.gradle_repositories = maven { url 'https://maven.google.com' }, google(), mavenCentral()
 
         android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0, androidx.appcompat:appcompat:1.6.1
@@ -186,7 +199,7 @@ jobs:
         export PATH="$HOME/.buildozer/android/platform/android-ndk-r25b:$PATH"
         unset ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK_HOME ANDROID_NDK_ROOT
         mkdir -p build-logs
-        echo "🚀 Starting build..."
+        echo "🚀 Starting build (ML Kit + Pyzbar)..."
         buildozer -v android debug 2>&1 | tee build-logs/build-error-log.txt
 
     - name: Find and copy APK
