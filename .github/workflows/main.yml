@@ -30,19 +30,14 @@ jobs:
 
     - name: Create required assets
       run: |
-        # Tạo wifi_printers.json rỗng nếu chưa có
         if [ ! -f "wifi_printers.json" ]; then
           echo '[]' > wifi_printers.json
           echo "✅ Created wifi_printers.json"
         fi
-        
-        # Tạo icon nếu chưa có
         if [ ! -f "icon.png" ]; then
           echo "⚠️ Warning: icon.png not found. Creating placeholder..."
           convert -size 512x512 xc:blue icon.png || echo "⚠️ ImageMagick not installed"
         fi
-
-        # Tạo android-permissions.xml với CAMERA
         if [ ! -f "android-permissions.xml" ]; then
           printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' > android-permissions.xml
           printf '%s\n' '<manifest xmlns:android="http://schemas.android.com/apk/res/android"' >> android-permissions.xml
@@ -97,9 +92,7 @@ jobs:
       run: |
         mkdir -p $HOME/.buildozer/android/platform
         cd $HOME/.buildozer/android/platform
-        
         if [ ! -d "android-sdk/cmdline-tools/latest" ]; then
-          echo "📦 Downloading Android SDK..."
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
           unzip -q cmdtools.zip -d android-sdk
           mkdir -p android-sdk/cmdline-tools/latest
@@ -108,22 +101,17 @@ jobs:
           ln -sf $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
                  $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
         fi
-        
         yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
           --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses || true
-        
         $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
           --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
           "platform-tools" "platforms;android-33" "build-tools;33.0.2" || true
-        
         if [ ! -d "android-ndk-r25b" ]; then
-          echo "📦 Downloading Android NDK r25b..."
           wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
           unzip -q ndk.zip
         fi
         mkdir -p android-ndk
         rsync -a android-ndk-r25b/ android-ndk/
-        
         echo "✅ SDK and NDK installed"
 
     - name: Create buildozer.spec
@@ -143,9 +131,6 @@ jobs:
         orientation = portrait
         fullscreen = 0
 
-        # =========================================================
-        # THÊM camera4kivy VÀO REQUIREMENTS
-        # =========================================================
         requirements = python3,kivy,pyjnius,pillow,plyer,pyzbar,camera4kivy
 
         android.permissions = CAMERA,INTERNET,ACCESS_NETWORK_STATE,BLUETOOTH,BLUETOOTH_ADMIN,BLUETOOTH_CONNECT,BLUETOOTH_SCAN,ACCESS_FINE_LOCATION
@@ -167,17 +152,14 @@ jobs:
         android.archs = arm64-v8a,armeabi-v7a
 
         p4a.branch = master
-		p4a.bootstrap = sdl2_gradle
-		
+        android.bootstrap = sdl2_gradle
+
         android.allow_backup = True
         android.enable_androidx = True
 
-        # =========================================================
-        # THÊM GRADLE CHO ML KIT
-        # =========================================================
         android.gradle_repositories = maven { url 'https://maven.google.com' }, google(), mavenCentral()
 
-        android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0
+        android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0, androidx.appcompat:appcompat:1.6.1
 
         exclude_patterns = tests,docs,*.pyc,*.pyo,*.md,__pycache__,.git
 
@@ -190,7 +172,6 @@ jobs:
         warn_on_root = 1
         android.accept_sdk_license = True
         EOF
-        
         echo "📄 buildozer.spec created"
 
     - name: Clean previous builds
@@ -203,9 +184,7 @@ jobs:
         export PATH="$HOME/.buildozer/android/platform/android-sdk/tools/bin:$PATH"
         export PATH="$HOME/.buildozer/android/platform/android-sdk/platform-tools:$PATH"
         export PATH="$HOME/.buildozer/android/platform/android-ndk-r25b:$PATH"
-        
         unset ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK_HOME ANDROID_NDK_ROOT
-        
         mkdir -p build-logs
         echo "🚀 Starting build..."
         buildozer -v android debug 2>&1 | tee build-logs/build-error-log.txt
@@ -214,7 +193,6 @@ jobs:
       run: |
         echo "🔍 Searching for APK..."
         APK_PATH=$(find . -type f -name "*.apk" 2>/dev/null | head -1)
-        
         if [ -n "$APK_PATH" ]; then
           echo "✅ Found APK at: $APK_PATH"
           mkdir -p bin
