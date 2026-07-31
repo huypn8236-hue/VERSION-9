@@ -161,7 +161,7 @@ jobs:
         # P4A CONFIG: BOOTSTRAP + COMMIT
         # =========================================================
         p4a.branch = master
-        p4a.bootstrap = sdl2_gradle
+        p4a.bootstrap = sdl2
         p4a.commit = v2024.01.21
 
         android.allow_backup = True
