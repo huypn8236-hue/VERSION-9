@@ -152,7 +152,7 @@ jobs:
         android.archs = arm64-v8a,armeabi-v7a
 
         p4a.branch = master
-        p4a.bootstrap = sdl2_gradle
+        p4a.bootstrap = sdl2
 
         android.allow_backup = True
         android.enable_androidx = True
