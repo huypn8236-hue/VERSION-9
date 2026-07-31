@@ -50,7 +50,7 @@ android.presplash_color = #FFFFFF
 # =========================================================
 
 # BOOTSTRAP PHẢI LÀ sdl2_gradle (ĐỂ HỖ TRỢ GRADLE DEPENDENCIES)
-# android.bootstrap = sdl2_gradle
+# android.bootstrap = sdl2
 
 # GRADLE REPOSITORIES CHO ML KIT
 android.gradle_repositories = maven { url 'https://maven.google.com' }
