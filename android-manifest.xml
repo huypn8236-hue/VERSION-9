@@ -1,0 +1,40 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.example.orderprinter">
+
+    <!-- ========================================================= -->
+    <!-- QUYỀN CAMERA -->
+    <!-- ========================================================= -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- ========================================================= -->
+    <!-- QUYỀN BLUETOOTH -->
+    <!-- ========================================================= -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- ========================================================= -->
+    <!-- QUYỀN MẠNG & LƯU TRỮ -->
+    <!-- ========================================================= -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!-- ========================================================= -->
+    <!-- APPLICATION (THÊM VÀO ĐỂ TRÁNH LỖI) -->
+    <!-- ========================================================= -->
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
+        android:label="Order Printer"
+        android:theme="@android:style/Theme.NoTitleBar"
+        android:exported="true"
+        android:requestLegacyExternalStorage="true">
+    </application>
+
+</manifest>
