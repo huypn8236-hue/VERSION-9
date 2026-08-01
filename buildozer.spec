@@ -53,10 +53,10 @@ android.presplash_color = #FFFFFF
 # android.bootstrap = sdl2
 
 # GRADLE REPOSITORIES CHO ML KIT
-android.gradle_repositories = maven { url 'https://maven.google.com' }
+android.gradle_repositories = maven { url 'https://maven.google.com' }, google(), mavenCentral()
 
 # GRADLE DEPENDENCIES CHO ML KIT
-android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0, androidx.appcompat:appcompat:1.6.1
+android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0, androidx.appcompat:appcompat:1.6.1, androidx.camera:camera-core:1.4.0, androidx.camera:camera-camera2:1.4.0, androidx.camera:camera-lifecycle:1.4.0, androidx.camera:camera-view:1.4.0
 
 # =========================================================
 # ANDROID SDK / NDK - GIỮ NGUYÊN
@@ -68,7 +68,7 @@ android.ndk_api = 21
 android.archs = arm64-v8a,armeabi-v7a
 
 p4a.branch = develop
-p4a.bootstrap = sdl2_gradle
+p4a.bootstrap = sdl2
 
 android.allow_backup = True
 android.enable_androidx = True
