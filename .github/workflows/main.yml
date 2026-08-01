@@ -151,7 +151,7 @@ jobs:
         presplash.filename = %(source.dir)s/icon.png
         android.presplash_color = #FFFFFF
 
-        android.api = 33
+        android.api = 34
         android.minapi = 21
         android.ndk = 25b
         android.ndk_api = 21
@@ -191,6 +191,40 @@ jobs:
       run: |
         buildozer android clean || true
         rm -rf ~/.buildozer/android/platform/build-* || true
+
+    # =========================================================
+    # THÊM CÁC BƯỚC MỚI VÀO ĐÂY (KHÔNG SỬA GÌ CŨ)
+    # =========================================================
+    - name: Install Android SDK 34 (bổ sung)
+      run: |
+        $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          "platforms;android-34" "build-tools;34.0.0" || true
+
+    - name: Patch Gradle compileSdk to 34
+      run: |
+        DIST_DIR=".buildozer/android/platform/build-arm64-v8a/dists/orderprinter"
+        BUILD_GRADLE="$DIST_DIR/app/build.gradle"
+        if [ -f "$BUILD_GRADLE" ]; then
+          echo "✅ Found build.gradle, patching..."
+          sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/g' "$BUILD_GRADLE"
+          sed -i 's/compileSdk [0-9]*/compileSdk 34/g' "$BUILD_GRADLE"
+          sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/g' "$BUILD_GRADLE"
+          sed -i 's/targetSdk [0-9]*/targetSdk 34/g' "$BUILD_GRADLE"
+          echo "✅ Patched to compileSdk=34"
+        else
+          echo "⚠️ build.gradle not found at $BUILD_GRADLE"
+        fi
+
+    - name: Debug Gradle (nếu vẫn lỗi)
+      if: always()
+      run: |
+        DIST_DIR=".buildozer/android/platform/build-arm64-v8a/dists/orderprinter"
+        if [ -d "$DIST_DIR" ]; then
+          cd "$DIST_DIR"
+          ./gradlew clean assembleDebug --stacktrace --info --warning-mode all || true
+        else
+          echo "⚠️ DIST_DIR not found, skipping debug"
+        fi
 
     - name: Build APK
       run: |
