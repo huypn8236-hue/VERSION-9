@@ -102,16 +102,44 @@ def has_been_printed(order_id):
 if is_android():
     from jnius import autoclass
     import socket
+    import sys
+    import traceback
+
     from kivy.uix.camera import Camera
     from android.permissions import request_permissions, Permission, check_permission
-    
+
+    # ==========================================================
     # camera4kivy
+    # ==========================================================
     try:
+        import camera4kivy
+
+        print("=" * 80)
+        print("camera4kivy module found")
+        print("Module :", camera4kivy)
+        print("File   :", getattr(camera4kivy, "__file__", "Unknown"))
+        print("Version:", getattr(camera4kivy, "__version__", "Unknown"))
+
         from camera4kivy import Preview
+
         HAS_CAMERA4KIVY = True
-    except ImportError:
+        print("camera4kivy Preview imported successfully")
+        print("=" * 80)
+
+    except Exception:
         HAS_CAMERA4KIVY = False
-        print("camera4kivy chưa được cài. pip install camera4kivy")
+
+        exc_type, exc_value, exc_tb = sys.exc_info()
+
+        print("=" * 80)
+        print("camera4kivy IMPORT FAILED")
+        print("Exception Type :", exc_type.__name__)
+        print("Exception      :", exc_value)
+        print("-" * 80)
+
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+
+        print("=" * 80)
 
     def request_android_permissions():
         try:
@@ -133,18 +161,22 @@ if is_android():
             adapter = BluetoothAdapter.getDefaultAdapter()
             if adapter is None:
                 return []
+
             paired = adapter.getBondedDevices()
             devices = []
+
             try:
                 arr = paired.toArray()
                 for dev in arr:
                     devices.append((dev.getName(), dev.getAddress()))
-            except:
+            except Exception:
                 it = paired.iterator()
                 while it.hasNext():
                     dev = it.next()
                     devices.append((dev.getName(), dev.getAddress()))
+
             return devices
+
         except Exception as e:
             print("find_paired_printers_pyjnius error:", e)
             return []
