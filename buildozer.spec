@@ -18,7 +18,7 @@ fullscreen = 0
 
 # --- Thư viện yêu cầu ---
 # ⚡ THÊM camera4kivy CHO CAMERA MỚI
-requirements = python3,kivy,pyjnius,pillow,plyer,certifi,pyzbar,camera4kivy
+requirements = python3,kivy,pyjnius,pillow,plyer,certifi,pyzbar,camera4kivy,gestures4kivy
 
 # --- Quyền Android ---
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,BLUETOOTH,BLUETOOTH_ADMIN,BLUETOOTH_CONNECT,BLUETOOTH_SCAN,ACCESS_FINE_LOCATION,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,CAMERA
