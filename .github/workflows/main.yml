@@ -234,7 +234,7 @@ jobs:
         export PATH="$HOME/.buildozer/android/platform/android-ndk-r25b:$PATH"
         unset ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK_HOME ANDROID_NDK_ROOT
         mkdir -p build-logs
-        export URL_freetype="https://download-mirror.savannah.gnu.org/releases/freetype/freetype-2.10.4.tar.gz"
+        export URL_freetype="https://download-mirror.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz"
         echo "🚀 Starting build (ML Kit + Pyzbar)..."
         buildozer -v android debug 2>&1 | tee build-logs/build-error-log.txt
 
