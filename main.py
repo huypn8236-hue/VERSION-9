@@ -418,7 +418,11 @@ class ScannerScreen(Screen):
         
         # Camera preview
         if is_android() and HAS_CAMERA4KIVY:
-            self.preview = Preview(aspect_ratio='16:9', size_hint=(1, 0.75))
+            try:
+                from camera4kivy import Preview
+                self.preview = Preview(aspect_ratio='16:9', size_hint=(1, 0.75))
+            except Exception as e:
+                self.preview = Label(text=f"❌ Lỗi camera4kivy:\n{str(e)[:50]}", font_size=sp(14), color=COLOR_ERROR)
         else:
             self.preview = Label(text="📱 Camera chỉ hỗ trợ trên Android", font_size=sp(16), color=COLOR_GRAY)
         self.layout.add_widget(self.preview)
@@ -459,7 +463,33 @@ class ScannerScreen(Screen):
             return
         
         if not HAS_CAMERA4KIVY:
-            self.status_label.text = "❌ camera4kivy chưa được cài!"
+            # =========================================================
+            # HIỂN THỊ LỖI CHI TIẾT KHI CAMERA4KIVY KHÔNG CÓ
+            # =========================================================
+            import traceback
+            error_detail = ""
+            
+            # Kiểm tra import chi tiết
+            try:
+                import camera4kivy
+                # Nếu import được, cập nhật biến cục bộ
+                self.status_label.text = f"✅ camera4kivy OK: {camera4kivy.__file__}"
+                # Thử tạo Preview để kiểm tra
+                try:
+                    from camera4kivy import Preview
+                    self.preview = Preview(aspect_ratio='16:9', size_hint=(1, 0.75))
+                    HAS_CAMERA4KIVY = True  # Gán lại cho biến toàn cục
+                    self._connect_camera()
+                    return
+                except Exception as e:
+                    error_detail = f"❌ Lỗi tạo Preview: {e}"
+            except ImportError as e:
+                error_detail = f"❌ ImportError: {e}"
+            except Exception as e:
+                error_detail = f"❌ Lỗi: {e}\n{traceback.format_exc()}"
+            
+            # Hiển thị popup chi tiết
+            self._show_camera_error(error_detail)
             return
         
         if check_permission(Permission.CAMERA):
@@ -468,12 +498,126 @@ class ScannerScreen(Screen):
             self.status_label.text = "Đang yêu cầu quyền camera..."
             self._request_camera_permission()
 
+    def _show_camera_error(self, error_detail):
+        """Hiển thị popup lỗi camera4kivy chi tiết"""
+        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
+        
+        error_text = (
+            f"❌ camera4kivy KHÔNG HOẠT ĐỘNG!\n\n"
+            f"{error_detail[:300]}\n\n"
+            f"📌 KIỂM TRA BUILDOZER.SPEC:\n"
+            f"1. requirements: camera4kivy, gestures4kivy\n"
+            f"2. p4a.hook = camerax_provider/gradle_options.py\n"
+            f"3. androidx.camera:* trong gradle_dependencies\n"
+            f"4. android.api >= 33 (hiện tại: {android.api})\n\n"
+            f"📌 XEM LOG BUILD:\n"
+            f"Tìm dòng 'camera4kivy' trong log để biết lỗi chi tiết."
+        )
+        
+        lbl = Label(
+            text=error_text,
+            font_size=sp(14),
+            halign='left',
+            valign='top'
+        )
+        lbl.bind(size=lambda instance, value: setattr(instance, 'text_size', (value[0] - dp(20), None)))
+        content.add_widget(lbl)
+        
+        # Nút copy lỗi
+        btn_copy = Button(
+            text="📋 Copy lỗi", 
+            size_hint_y=None, 
+            height=dp(44),
+            background_color=COLOR_PRIMARY, 
+            color=COLOR_WHITE
+        )
+        btn_copy.bind(on_release=lambda x: self._copy_error(error_detail))
+        content.add_widget(btn_copy)
+        
+        # Nút đóng
+        btn_close = Button(
+            text="Đóng", 
+            size_hint_y=None, 
+            height=dp(44),
+            background_color=COLOR_GRAY, 
+            color=COLOR_WHITE
+        )
+        btn_close.bind(on_release=lambda x: popup.dismiss())
+        content.add_widget(btn_close)
+        
+        popup = Popup(
+            title="❌ Lỗi camera4kivy", 
+            content=content, 
+            size_hint=(0.92, 0.7),
+            auto_dismiss=True
+        )
+        popup.open()
+        
+        # Cập nhật status
+        self.status_label.text = f"❌ {error_detail[:80]}"
+
+    def _copy_error(self, error_text):
+        """Copy lỗi vào clipboard hoặc lưu file"""
+        try:
+            from kivy.core.clipboard import Clipboard
+            Clipboard.copy(error_text)
+            Popup(
+                title="✅ Đã copy", 
+                content=Label(text="Nội dung lỗi đã được copy vào clipboard!"),
+                size_hint=(0.6, 0.3)
+            ).open()
+        except:
+            # Lưu vào file nếu clipboard không hoạt động
+            try:
+                save_path = "/sdcard/camera_error.txt"
+                with open(save_path, "w", encoding="utf-8") as f:
+                    f.write(error_text)
+                Popup(
+                    title="✅ Đã lưu", 
+                    content=Label(text=f"Lỗi đã lưu vào:\n{save_path}"),
+                    size_hint=(0.7, 0.3)
+                ).open()
+            except:
+                pass
+
     def _request_camera_permission(self):
         try:
+            from android.permissions import request_permissions, Permission
             request_permissions([Permission.CAMERA], self._on_permission_result)
         except Exception as e:
             print(f"Permission request error: {e}")
             self.status_label.text = "Không thể yêu cầu quyền"
+            self._show_permission_error(str(e))
+
+    def _show_permission_error(self, error):
+        """Hiển thị lỗi quyền chi tiết"""
+        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
+        lbl = Label(
+            text=f"❌ Không thể yêu cầu quyền Camera!\n\n{error[:200]}\n\n"
+                 f"Vui lòng vào Cài đặt > Ứng dụng > Order Printer > Quyền\n"
+                 f"Bật Camera thủ công.",
+            font_size=sp(14),
+            halign='left',
+            valign='top'
+        )
+        lbl.bind(size=lambda instance, value: setattr(instance, 'text_size', (value[0] - dp(20), None)))
+        content.add_widget(lbl)
+        
+        btn = Button(
+            text="Mở Cài đặt",
+            size_hint_y=None,
+            height=dp(44),
+            background_color=COLOR_PRIMARY,
+            color=COLOR_WHITE
+        )
+        btn.bind(on_release=self._open_app_settings)
+        content.add_widget(btn)
+        
+        Popup(
+            title="❌ Lỗi quyền Camera",
+            content=content,
+            size_hint=(0.9, 0.5)
+        ).open()
 
     def _on_permission_result(self, permissions, grant_results):
         if grant_results and len(grant_results) > 0 and grant_results[0]:
@@ -521,6 +665,7 @@ class ScannerScreen(Screen):
     def _open_app_settings(self, *args):
         try:
             if is_android():
+                from jnius import autoclass
                 Intent = autoclass('android.content.Intent')
                 Settings = autoclass('android.provider.Settings')
                 Uri = autoclass('android.net.Uri')
@@ -542,6 +687,7 @@ class ScannerScreen(Screen):
             return
         
         try:
+            from camera4kivy import Preview
             self.preview.connect_camera(enable_analyze_pixels=True,
                                        analyze_pixels_resolution=(640, 480))
             self.preview.analyze_pixels_callback = self.analyze_pixels
@@ -550,8 +696,28 @@ class ScannerScreen(Screen):
             self.is_scanning = True
             print("✅ Camera connected (camera4kivy)")
         except Exception as e:
-            self.status_label.text = f"Lỗi camera: {str(e)[:40]}"
+            import traceback
+            self.status_label.text = f"❌ Lỗi camera: {str(e)[:40]}"
             print(f"Camera connect error: {e}")
+            print(traceback.format_exc())
+            # Hiển thị lỗi chi tiết
+            content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
+            lbl = Label(
+                text=f"❌ Không thể kết nối camera!\n\n{str(e)}\n\n{traceback.format_exc()[:200]}",
+                font_size=sp(14),
+                halign='left',
+                valign='top'
+            )
+            lbl.bind(size=lambda instance, value: setattr(instance, 'text_size', (value[0] - dp(20), None)))
+            content.add_widget(lbl)
+            
+            btn = Button(text="Đóng", size_hint_y=None, height=dp(44),
+                        background_color=COLOR_GRAY, color=COLOR_WHITE)
+            btn.bind(on_release=lambda x: popup.dismiss())
+            content.add_widget(btn)
+            
+            popup = Popup(title="❌ Lỗi camera", content=content, size_hint=(0.9, 0.6))
+            popup.open()
 
     def analyze_pixels(self, pixels, image_size, image_pos, scale, mirror):
         if not self.is_scanning or not is_android():
@@ -567,6 +733,7 @@ class ScannerScreen(Screen):
             if width == 0 or height == 0:
                 return
             
+            from PIL import Image
             img = Image.frombytes('RGBA', (width, height), pixels)
             
             if self.scanner_core:
