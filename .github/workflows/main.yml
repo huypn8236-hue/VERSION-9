@@ -137,7 +137,7 @@ jobs:
         # =========================================================
         # CHỈ ML KIT + PYZBAR (KHÔNG OPENCV)
         # =========================================================
-        requirements = python3,kivy,pyjnius,pillow,plyer,pyzbar,camera4kivy
+        requirements = python3,kivy,pyjnius,pillow,plyer,pyzbar,camera4kivy,gestures4kivy
 
         android.permissions = CAMERA,INTERNET,ACCESS_NETWORK_STATE,BLUETOOTH,BLUETOOTH_ADMIN,BLUETOOTH_CONNECT,BLUETOOTH_SCAN,ACCESS_FINE_LOCATION
 
