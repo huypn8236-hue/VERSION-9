@@ -1446,27 +1446,119 @@ class HomeScreen(Screen):
             self.manager.current = screen_name
 
     def open_scanner(self, *args):
-        """Mở màn hình scanner"""
+        """Mở màn hình scanner - CÓ HIỂN THỊ LỖI CHI TIẾT"""
+        import traceback
+        
         if not is_android():
             Popup(title="Thông báo", 
                   content=Label(text="Tính năng scan chỉ hỗ trợ trên Android.\nVui lòng nhập mã đơn hàng thủ công."),
                   size_hint=(.8,.5)).open()
             return
         
+        # =========================================================
+        # KIỂM TRA CHI TIẾT HAS_CAMERA4KIVY
+        # =========================================================
         if not HAS_CAMERA4KIVY:
-            Popup(title="Thông báo", 
-                  content=Label(text="camera4kivy chưa được cài!\nVui lòng cài:\npip install camera4kivy"),
-                  size_hint=(.8,.5)).open()
-            return
+            error_detail = ""
+            
+            # Thử import để lấy lỗi thực sự
+            try:
+                import camera4kivy
+                # Nếu import được, cập nhật biến toàn cục
+                globals()['HAS_CAMERA4KIVY'] = True
+                print("✅ camera4kivy imported successfully")
+            except ImportError as e:
+                error_detail = f"❌ ImportError: {e}\n{traceback.format_exc()}"
+                print(error_detail)
+            except Exception as e:
+                error_detail = f"❌ Lỗi: {e}\n{traceback.format_exc()}"
+                print(error_detail)
+            
+            # Nếu vẫn không có, hiển thị popup chi tiết
+            if not HAS_CAMERA4KIVY:
+                content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
+                
+                error_text = (
+                    f"❌ camera4kivy KHÔNG HOẠT ĐỘNG!\n\n"
+                    f"{error_detail[:300] if error_detail else 'Không rõ nguyên nhân'}\n\n"
+                    f"📌 KIỂM TRA BUILDOZER.SPEC:\n"
+                    f"1. requirements: camera4kivy, gestures4kivy\n"
+                    f"2. p4a.hook = camerax_provider/gradle_options.py\n"
+                    f"3. androidx.camera:* trong gradle_dependencies\n"
+                    f"4. android.api >= 33\n\n"
+                    f"📌 XEM LOG BUILD:\n"
+                    f"Tìm dòng 'camera4kivy' trong log."
+                )
+                
+                lbl = Label(
+                    text=error_text,
+                    font_size=sp(14),
+                    halign='left',
+                    valign='top'
+                )
+                lbl.bind(size=lambda instance, value: setattr(instance, 'text_size', (value[0] - dp(20), None)))
+                content.add_widget(lbl)
+                
+                # Nút copy lỗi
+                btn_copy = Button(
+                    text="📋 Copy lỗi", 
+                    size_hint_y=None, 
+                    height=dp(44),
+                    background_color=COLOR_PRIMARY, 
+                    color=COLOR_WHITE
+                )
+                btn_copy.bind(on_release=lambda x: self._copy_error_to_clipboard(error_detail or "Không rõ lỗi"))
+                content.add_widget(btn_copy)
+                
+                popup = Popup(
+                    title="❌ Lỗi camera4kivy",
+                    content=content,
+                    size_hint=(0.92, 0.7),
+                    auto_dismiss=True
+                )
+                popup.open()
+                return
         
         try:
             if not self.manager.has_screen("scanner"):
                 self.manager.add_widget(ScannerScreen(name="scanner"))
             self.manager.current = "scanner"
         except Exception as e:
+            error_msg = traceback.format_exc()
             print(f"Open scanner error: {e}")
-            Popup(title="Lỗi", content=Label(text=f"Không thể mở camera:\n{str(e)[:50]}"),
-                  size_hint=(.8,.4)).open()
+            print(error_msg)
+            Popup(
+                title="❌ Lỗi mở scanner", 
+                content=Label(
+                    text=f"{str(e)[:100]}\n\n{error_msg[:200]}",
+                    font_size=sp(14)
+                ),
+                size_hint=(0.9, 0.6)
+            ).open()
+
+    def _copy_error_to_clipboard(self, error_text):
+        """Copy lỗi vào clipboard hoặc lưu file"""
+        try:
+            from kivy.core.clipboard import Clipboard
+            Clipboard.copy(error_text)
+            Popup(
+                title="✅ Đã copy", 
+                content=Label(text="Nội dung lỗi đã được copy vào clipboard!"),
+                size_hint=(0.6, 0.3)
+            ).open()
+        except:
+            # Lưu vào file nếu clipboard không hoạt động
+            try:
+                save_path = "/sdcard/camera_error.txt"
+                with open(save_path, "w", encoding="utf-8") as f:
+                    f.write(error_text)
+                Popup(
+                    title="✅ Đã lưu", 
+                    content=Label(text=f"Lỗi đã lưu vào:\n{save_path}"),
+                    size_hint=(0.7, 0.3)
+                ).open()
+            except:
+                pass
 
     def test_print(self, *args):
         if not is_android():
