@@ -56,7 +56,8 @@ android.presplash_color = #FFFFFF
 android.gradle_repositories = maven { url 'https://maven.google.com' }, google(), mavenCentral()
 
 # GRADLE DEPENDENCIES CHO ML KIT
-android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.core:core:1.9.0, androidx.appcompat:appcompat:1.6.1, androidx.camera:camera-core:1.4.0, androidx.camera:camera-camera2:1.4.0, androidx.camera:camera-lifecycle:1.4.0, androidx.camera:camera-view:1.4.0
+android.gradle_dependencies = com.google.mlkit:barcode-scanning:17.2.0, androidx.appcompat:appcompat:1.6.1
+# androidx.camera:camera-core:1.4.0, androidx.camera:camera-camera2:1.4.0, androidx.camera:camera-lifecycle:1.4.0, androidx.camera:camera-view:1.4.0
 
 # =========================================================
 # ANDROID SDK / NDK - GIỮ NGUYÊN
