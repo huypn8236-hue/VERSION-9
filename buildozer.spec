@@ -69,7 +69,7 @@ android.archs = arm64-v8a
 
 p4a.branch = develop
 p4a.bootstrap = sdl2
-p4a.hook = camerax_provider
+p4a.hook = camerax_provider/gradle_options.py
 
 android.allow_backup = True
 android.enable_androidx = True
