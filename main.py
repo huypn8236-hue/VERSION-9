@@ -396,7 +396,7 @@ def get_scanner_core():
     return _scanner_core
 
 # =========================================================
-# MÀN HÌNH SCANNER (CAMERA4KIVY + ML KIT + PYZBAR) - ĐÃ SỬA LỖI
+# MÀN HÌNH SCANNER (CAMERA4KIVY + ML KIT + PYZBAR) - ĐÃ SỬA LỖI RESET
 # =========================================================
 class ScannerScreen(Screen):
     def __init__(self, **kwargs):
@@ -455,7 +455,20 @@ class ScannerScreen(Screen):
         # Scanner core
         self.scanner_core = get_scanner_core() if is_android() else None
 
+    def _reset_state(self):
+        """Reset toàn bộ trạng thái của màn hình scan"""
+        self.is_scanning = False
+        self.scanned_data = None
+        self.result_label.text = ""
+        self._last_scan_time = 0
+        self.status_label.text = "Đang khởi tạo lại..."
+        if hasattr(self.preview, 'analyze_pixels_callback'):
+            self.preview.analyze_pixels_callback = None
+
     def on_enter(self):
+        # Reset trạng thái mỗi khi vào màn hình
+        self._reset_state()
+        
         if not is_android():
             self.status_label.text = "Camera chỉ hỗ trợ Android"
             return
@@ -464,9 +477,6 @@ class ScannerScreen(Screen):
             self.status_label.text = "❌ camera4kivy chưa được cài!"
             return
         
-        # =========================================================
-        # FIX 1: KHÔNG gọi _connect_camera trực tiếp, luôn dùng Clock
-        # =========================================================
         if check_permission(Permission.CAMERA):
             self.status_label.text = "Đang mở camera..."
             Clock.schedule_once(lambda dt: self._connect_camera(), 0.5)
@@ -482,9 +492,6 @@ class ScannerScreen(Screen):
             self.status_label.text = "Không thể yêu cầu quyền"
 
     def _on_permission_result(self, permissions, grant_results):
-        # =========================================================
-        # FIX 2: Đảm bảo callback chạy trên main thread Kivy
-        # =========================================================
         Clock.schedule_once(lambda dt: self._handle_permission_result(permissions, grant_results), 0)
 
     def _handle_permission_result(self, permissions, grant_results):
@@ -553,24 +560,15 @@ class ScannerScreen(Screen):
         if self._camera_connected or not is_android():
             return
         
-        # =========================================================
-        # FIX 3: Tách connect_camera thành 2 bước, delay thêm 0.3s
-        # =========================================================
         Clock.schedule_once(lambda dt: self._do_connect_camera(), 0.3)
 
     def _do_connect_camera(self):
         try:
-            # =========================================================
-            # FIX 4: THÊM enable_video=False - GIẢM TẢI PHẦN CỨNG
-            # =========================================================
             self.preview.connect_camera(
                 enable_analyze_pixels=True,
-                enable_video=False,  # ← QUAN TRỌNG: KHÔNG BẬT VIDEO
+                enable_video=False,
                 analyze_pixels_resolution=640
             )
-            # =========================================================
-            # FIX 5: GÁN ĐÚNG TÊN CALLBACK (analyze_pixels_callback)
-            # =========================================================
             self.preview.analyze_pixels_callback = self.analyze_pixels_callback
             self._camera_connected = True
             self.status_label.text = "Đang scan..."
@@ -582,9 +580,6 @@ class ScannerScreen(Screen):
             import traceback
             traceback.print_exc()
 
-    # =========================================================
-    # QUAN TRỌNG: ĐỔI TÊN HÀM TỪ analyze_pixels THÀNH analyze_pixels_callback
-    # =========================================================
     def analyze_pixels_callback(self, pixels, image_size, image_pos, scale, mirror):
         if not self.is_scanning or not is_android():
             return
@@ -615,15 +610,19 @@ class ScannerScreen(Screen):
         self.is_scanning = False
         if hasattr(self.preview, 'analyze_pixels_callback'):
             self.preview.analyze_pixels_callback = None
+        # Reset camera sau khi quét thành công để sẵn sàng cho lần sau
+        self._disconnect_camera()
         Clock.schedule_once(lambda dt: self.go_back_with_data(), 0.5)
 
     def restart_scan(self, *args):
         self.scanned_data = None
         self.result_label.text = ""
         self.status_label.text = "Đang khởi động lại camera..."
-        self.is_scanning = True
-        if hasattr(self.preview, 'analyze_pixels_callback'):
-            self.preview.analyze_pixels_callback = self.analyze_pixels_callback
+        self.is_scanning = False
+        # Ngắt kết nối camera và kết nối lại
+        if self._camera_connected:
+            self._disconnect_camera()
+        Clock.schedule_once(lambda dt: self._connect_camera(), 0.5)
 
     def go_back(self, *args):
         self.scanned_data = None
