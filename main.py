@@ -566,7 +566,7 @@ class ScannerScreen(Screen):
             self.preview.connect_camera(
                 enable_analyze_pixels=True,
                 enable_video=False,  # ← QUAN TRỌNG: KHÔNG BẬT VIDEO
-                analyze_pixels_resolution=(640, 480)
+                analyze_pixels_resolution=640
             )
             # =========================================================
             # FIX 5: GÁN ĐÚNG TÊN CALLBACK (analyze_pixels_callback)
