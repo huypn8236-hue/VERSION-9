@@ -568,7 +568,10 @@ class ScannerScreen(Screen):
                 enable_video=False,  # ← QUAN TRỌNG: KHÔNG BẬT VIDEO
                 analyze_pixels_resolution=(640, 480)
             )
-            self.preview.analyze_pixels_callback = self.analyze_pixels
+            # =========================================================
+            # FIX 5: GÁN ĐÚNG TÊN CALLBACK (analyze_pixels_callback)
+            # =========================================================
+            self.preview.analyze_pixels_callback = self.analyze_pixels_callback
             self._camera_connected = True
             self.status_label.text = "Đang scan..."
             self.is_scanning = True
@@ -579,7 +582,10 @@ class ScannerScreen(Screen):
             import traceback
             traceback.print_exc()
 
-    def analyze_pixels(self, pixels, image_size, image_pos, scale, mirror):
+    # =========================================================
+    # QUAN TRỌNG: ĐỔI TÊN HÀM TỪ analyze_pixels THÀNH analyze_pixels_callback
+    # =========================================================
+    def analyze_pixels_callback(self, pixels, image_size, image_pos, scale, mirror):
         if not self.is_scanning or not is_android():
             return
         
@@ -617,7 +623,7 @@ class ScannerScreen(Screen):
         self.status_label.text = "Đang khởi động lại camera..."
         self.is_scanning = True
         if hasattr(self.preview, 'analyze_pixels_callback'):
-            self.preview.analyze_pixels_callback = self.analyze_pixels
+            self.preview.analyze_pixels_callback = self.analyze_pixels_callback
 
     def go_back(self, *args):
         self.scanned_data = None
