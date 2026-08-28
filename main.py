@@ -821,7 +821,7 @@ def create_label_image(order_id, customer, box_index, box_total,
 
 # ---------- TẠO ẢNH RASTER CHO ZPL2 ----------
 def create_zpl_raster(order_id, customer, box_index, box_total,
-                      width_mm=115, height_mm=70, dpi=203):
+                      width_mm=95, height_mm=70, dpi=203):
     if not HAS_PIL:
         raise ImportError("Pillow chưa được cài đặt.")
 
