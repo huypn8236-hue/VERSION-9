@@ -767,7 +767,7 @@ def find_system_font():
 
 # ---------- TẠO ẢNH PREVIEW (115x70mm) ----------
 def create_label_image(order_id, customer, box_index, box_total,
-                       width_mm=115, height_mm=70, dpi=203):
+                       width_mm=95, height_mm=70, dpi=203):
     if not HAS_PIL:
         raise ImportError("Pillow chưa được cài đặt.")
 
@@ -821,7 +821,7 @@ def create_label_image(order_id, customer, box_index, box_total,
 
 # ---------- TẠO ẢNH RASTER CHO ZPL2 ----------
 def create_zpl_raster(order_id, customer, box_index, box_total,
-                      width_mm=115, height_mm=70, dpi=203):
+                      width_mm=95, height_mm=70, dpi=203):
     if not HAS_PIL:
         raise ImportError("Pillow chưa được cài đặt.")
 
@@ -834,7 +834,7 @@ def create_zpl_raster(order_id, customer, box_index, box_total,
     font_bold_path = find_system_font_bold()
     if font_bold_path:
         try:
-            font_order_bold = ImageFont.truetype(font_bold_path, size=130)
+            font_order_bold = ImageFont.truetype(font_bold_path, size=120)
         except:
             font_order_bold = ImageFont.load_default()
     else:
@@ -843,8 +843,8 @@ def create_zpl_raster(order_id, customer, box_index, box_total,
     font_path = find_system_font()
     if font_path:
         try:
-            font_name = ImageFont.truetype(font_path, size=85)
-            font_box = ImageFont.truetype(font_path, size=90)
+            font_name = ImageFont.truetype(font_path, size=75)
+            font_box = ImageFont.truetype(font_path, size=80)
         except:
             font_name = ImageFont.load_default()
             font_box = ImageFont.load_default()
@@ -970,7 +970,7 @@ def pil_to_zpl_gf_chunked(img, max_bytes_per_chunk=30*1024):
 
 def get_label_zpl_bytes(order_id, customer, box_index, box_total):
     img = create_zpl_raster(order_id, customer, box_index, box_total,
-                            width_mm=115, height_mm=70, dpi=203)
+                            width_mm=95, height_mm=70, dpi=203)
 
     chunks = pil_to_zpl_gf_chunked(img, max_bytes_per_chunk=30*1024)
 
